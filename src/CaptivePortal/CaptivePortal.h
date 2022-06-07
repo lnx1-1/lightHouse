@@ -9,10 +9,10 @@
 #include <cstdint>
 #include <WebServer.h>
 #include <DNSServer.h>
+#include <iostream>
 
-
-#define ACCESPOINT_IP (172, 0, 0, 1)
-#define ACCESPOINT_NETMASK (255, 255, 255, 0)
+#define ACCESPOINT_IP 172, 0, 0, 1
+#define ACCESPOINT_NETMASK 255, 255, 255, 0
 #define HOST_NAME "LightHouse"
 #define AP_SSID "LightHouse Wifi"
 
