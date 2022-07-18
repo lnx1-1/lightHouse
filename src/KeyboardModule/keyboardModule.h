@@ -14,12 +14,17 @@ class keyboardModule {
 private:
     PS2KeyAdvanced keyboard;
     String textBuffer = "";
+    String sendBuffer = "";
     bool isUpdate = false;
+    bool sendBuffAvail = false;
 public:
     bool isUpdateAvailable();
     void setup();
     void loop();
     String getBuffer();
+    String getSendBuffer();
+    bool isSendBufferAvailable();
+    void flushBuff();
 };
 
 

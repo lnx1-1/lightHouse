@@ -59,6 +59,8 @@ void keyboardModule::loop() {
                 case PS2_KEY_ENTER:
                     Serial.println("\nEnter");
                     Serial.println(textBuffer);
+                    sendBuffer = textBuffer;
+                    sendBuffAvail = true;
                     textBuffer = "";
                     break;
                 case PS2_KEY_DELETE:
@@ -73,4 +75,23 @@ void keyboardModule::loop() {
 
         }
     }
+}
+
+bool keyboardModule::isSendBufferAvailable() {
+    return sendBuffAvail;
+}
+
+String keyboardModule::getSendBuffer() {
+    sendBuffAvail = false;
+    return sendBuffer;
+}
+
+void keyboardModule::flushBuff() {
+    Serial.println("Flush Called");
+    textBuffer = "";
+    while(keyboard.available()){
+        keyboard.read();
+        Serial.println("Flush\n");
+    }
+
 }

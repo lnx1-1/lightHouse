@@ -17,7 +17,7 @@ Adafruit_SSD1306 display(SCREEN_X, SCREEN_Y, &Wire, -1);
 
 keyboardModule keyboard;
 
-void setup()
+void setupExample()
 {
     keyboard.setup();
     Wire.begin();
@@ -33,7 +33,7 @@ void setup()
 }
 
 
-void loop()
+void loopExample()
 {
     keyboard.loop();
     if(keyboard.isUpdateAvailable()){

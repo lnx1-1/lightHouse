@@ -808,11 +808,11 @@ return ( retdata | ( (uint16_t)PS2_keystatus << 8 ) );
     Assumes data is within range */
 void set_lock( )
 {
-send_byte( PS2_KC_LOCK );        // send command
-send_byte( PS2_KEY_IGNORE );     // wait ACK
-send_byte( PS2_led_lock );       // send data from internal variable
-if( ( send_byte( PS2_KEY_IGNORE ) ) ) // wait ACK
-  send_next( );              // if idle start transmission
+//send_byte( PS2_KC_LOCK );        // send command
+//send_byte( PS2_KEY_IGNORE );     // wait ACK
+//send_byte( PS2_led_lock );       // send data from internal variable
+//if( ( send_byte( PS2_KEY_IGNORE ) ) ) // wait ACK
+//  send_next( );              // if idle start transmission
 }
 
 
