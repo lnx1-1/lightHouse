@@ -19,7 +19,8 @@ CaptivePortal portal;
 MorseStation morse_station;
 string indexHTML =
 
-#include "../res/index.html";
+#include "../res/index.html"
+        ;
 
 void handleIndexHTML();
 
@@ -158,7 +159,7 @@ void checkMorseQueue() {
 
 void loop() {
 //    checkRelaisState();
-    
+
     portal.handleClients();// Should be on
     checkMorseQueue(); //Should be on
 }
