@@ -2,17 +2,28 @@
 
 #include "CaptivePortal/CaptivePortal.h"
 #include "MorseStation/MorseStation.h"
+#include "KeyboardModule/keyboardModule.h"
+#include "Display/OledDisplay.h"
 #include <regex>
 
 #define ACTIVITY_TIME 1000
 #define GPIO_PIN_RELAIS 2
+#define TEST_KEYBOARD true
+#define DATAPIN 32
+#define IRQPIN  33
+
 bool isRelaisOn = false;
+bool sendingInProgress = true;
 uint64_t currentMorseImpulsEnd = 0;
 unsigned long lastTick = millis();
 uint32_t _DIT_lenMS = DIT_LEN;
 uint32_t _DAH_lenMS = DAH_LEN;
+
 CaptivePortal portal;
 MorseStation morse_station;
+keyboardModule _keyboard;
+OledDisplay ODisplay;
+
 
 string indexHTML =
 
@@ -59,13 +70,13 @@ string changeSpeedValue(string html, int newVal) {
     html = regex_replace(html, reg, replacementString);
 
     string replacementString2 = "$1 " + to_string(newVal) + "$2";
-    regex reg2("(<div style = \"text-align: center;\">Speed:).*?(</div>).*?");
+    regex reg2("(<div style = \"text-align: center;\">Delay:).*?(</div>).*?");
     html = regex_replace(html, reg2, replacementString2);
     return html;
 }
 
 void handleIndexHTML() {
-    indexHTML = changeSpeedValue(indexHTML, (int)_DIT_lenMS);
+    indexHTML = changeSpeedValue(indexHTML, (int) _DIT_lenMS);
     portal.sendHTML(indexHTML.c_str());
 }
 
@@ -94,6 +105,7 @@ void setup() {
     Serial.begin(115200);
     // write your initialization code here
 
+
     portal.setup();
     portal.registerWebHandler("/sendmsg", &handleSendMSG);
     portal.registerWebHandler("/index.html", &handleIndexHTML);
@@ -102,6 +114,10 @@ void setup() {
     portal.startCaptivePortal();
 
     setupGPIO();
+
+    ODisplay.setup();
+
+    _keyboard.setup();
 
     Serial.printf("Setup done\n");
 }
@@ -154,6 +170,34 @@ void checkMorseQueue() {
 
 void loop() {
 //    checkRelaisState();
-    portal.handleClients();
-    checkMorseQueue();
+    _keyboard.loop();
+
+    if (_keyboard.isUpdateAvailable() && !sendingInProgress) {
+        ODisplay.getDisp().clearDisplay();
+        ODisplay.getDisp().setTextSize(2);
+        ODisplay.getDisp().setTextColor(SSD1306_WHITE);
+        ODisplay.getDisp().setCursor(0, 0);
+        ODisplay.getDisp().println(_keyboard.getBuffer());
+        ODisplay.getDisp().display();
+        Serial.printf("%s\n", _keyboard.getBuffer().c_str());
+        if (_keyboard.isSendBufferAvailable()) {
+            morse_station.addMessage(_keyboard.getSendBuffer().c_str());
+        }
+    } else if (morse_station.isDataReady()) {
+        ODisplay.getDisp().clearDisplay();
+        ODisplay.getDisp().setCursor(0, 15);
+        ODisplay.getDisp().setTextSize(2);
+        ODisplay.getDisp().setTextColor(SSD1306_WHITE);
+        ODisplay.getDisp().println("Sending\nMessage...");
+        ODisplay.getDisp().display();
+        sendingInProgress = true;
+    } else if(!morse_station.isDataReady() && sendingInProgress){
+        //Wechsel von Sending zu normal
+        _keyboard.flushBuff();
+        sendingInProgress = false;
+        ODisplay.getDisp().clearDisplay();
+        ODisplay.getDisp().display();
+    }
+    portal.handleClients();// Should be on
+    checkMorseQueue(); //Should be on
 }
