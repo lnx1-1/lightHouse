@@ -6,6 +6,10 @@
 
 #define ACTIVITY_TIME 1000
 #define GPIO_PIN_RELAIS 2
+#define TEST_KEYBOARD true
+#define DATAPIN 32
+#define IRQPIN  33
+
 bool isRelaisOn = false;
 uint64_t currentMorseImpulsEnd = 0;
 unsigned long lastTick = millis();
@@ -13,11 +17,9 @@ uint32_t _DIT_lenMS = DIT_LEN;
 uint32_t _DAH_lenMS = DAH_LEN;
 CaptivePortal portal;
 MorseStation morse_station;
-
 string indexHTML =
 
-#include "../res/index.html"
-        ;
+#include "../res/index.html";
 
 void handleIndexHTML();
 
@@ -65,7 +67,7 @@ string changeSpeedValue(string html, int newVal) {
 }
 
 void handleIndexHTML() {
-    indexHTML = changeSpeedValue(indexHTML, (int)_DIT_lenMS);
+    indexHTML = changeSpeedValue(indexHTML, (int) _DIT_lenMS);
     portal.sendHTML(indexHTML.c_str());
 }
 
@@ -94,6 +96,7 @@ void setup() {
     Serial.begin(115200);
     // write your initialization code here
 
+
     portal.setup();
     portal.registerWebHandler("/sendmsg", &handleSendMSG);
     portal.registerWebHandler("/index.html", &handleIndexHTML);
@@ -102,6 +105,7 @@ void setup() {
     portal.startCaptivePortal();
 
     setupGPIO();
+
 
     Serial.printf("Setup done\n");
 }
@@ -154,6 +158,7 @@ void checkMorseQueue() {
 
 void loop() {
 //    checkRelaisState();
-    portal.handleClients();
-    checkMorseQueue();
+    
+    portal.handleClients();// Should be on
+    checkMorseQueue(); //Should be on
 }
