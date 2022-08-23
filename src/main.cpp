@@ -6,11 +6,18 @@
 #include "Display/OledDisplay.h"
 #include <regex>
 
+
 #define ACTIVITY_TIME 1000
 #define GPIO_PIN_RELAIS 2
 #define TEST_KEYBOARD true
 #define DATAPIN 32
 #define IRQPIN  33
+#define LOOP_LAST_MESSAGE_DELAY_MS (90*1000)
+#define LOOP_LAST_MESSAGE true
+
+String _lastSendMessage ="";
+unsigned long _lastMessageTimestamp;
+bool _loopLastMessage = LOOP_LAST_MESSAGE;
 
 bool isRelaisOn = false;
 bool sendingInProgress = true;
@@ -60,6 +67,7 @@ void handleTestLight() {
 void handleSendMSG() {
     updateSpeed();
     String msg = getMessage();
+    _lastSendMessage = msg;
     morse_station.addMessage(msg.c_str());
     handleIndexHTML();
 }
@@ -97,6 +105,13 @@ void updateSpeed() {
         cout << "Go New Speed: " << outSpd << endl;
         _DIT_lenMS = outSpd;
         _DAH_lenMS = _DIT_lenMS * 3;
+    }
+}
+
+void checkIdleLoopLastMessage(){
+    if((millis() > (LOOP_LAST_MESSAGE_DELAY_MS + _lastMessageTimestamp)) && !morse_station.isDataReady()){
+        morse_station.addMessage(_lastSendMessage.c_str());
+        _lastMessageTimestamp = millis();
     }
 }
 
@@ -141,8 +156,8 @@ void checkMorseQueue() {
     if (millis() > currentMorseImpulsEnd) {
         relaisSwitch(false);
         if (morse_station.isDataReady()) {
+            _lastMessageTimestamp = millis();
             char impuls = morse_station.getNextImpuls();
-
             uint32_t impulsLen = 0;
             switch (impuls) {
                 case '.':
@@ -181,7 +196,9 @@ void loop() {
         ODisplay.getDisp().display();
         Serial.printf("%s\n", _keyboard.getBuffer().c_str());
         if (_keyboard.isSendBufferAvailable()) {
-            morse_station.addMessage(_keyboard.getSendBuffer().c_str());
+            String message = _keyboard.getSendBuffer();
+            _lastSendMessage = message;
+            morse_station.addMessage(message.c_str());
         }
     } else if (morse_station.isDataReady()) {
         ODisplay.getDisp().clearDisplay();
@@ -191,6 +208,7 @@ void loop() {
         ODisplay.getDisp().println("Sending\nMessage...");
         ODisplay.getDisp().display();
         sendingInProgress = true;
+
     } else if(!morse_station.isDataReady() && sendingInProgress){
         //Wechsel von Sending zu normal
         _keyboard.flushBuff();
@@ -200,4 +218,8 @@ void loop() {
     }
     portal.handleClients();// Should be on
     checkMorseQueue(); //Should be on
+
+    if(_loopLastMessage){
+        checkIdleLoopLastMessage();
+    }
 }
